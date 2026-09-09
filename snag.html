@@ -159,7 +159,7 @@
                   <option value="snag">Snag</option>
                 </select>
               </label>
-              <select id="hs-target"></label>
+              <select id="hs-target"></select>
               <span class="muted" id="hs-hint">Click the image</span>
             </div>
             <div class="eq-wrap" id="eq-wrap">
@@ -334,6 +334,8 @@
     author.hidden = false;
     $("eq-img").src = p.src;
     var wrap = $("eq-wrap");
+    var preview = $("pano-preview");
+    if (!wrap || !preview) return;
     wrap.querySelectorAll(".hs").forEach(function (el) { el.remove(); });
     (p.hotspots || []).forEach(function (h, i) {
       var pos = yawPitchToPercent(h.yaw, h.pitch);
@@ -352,7 +354,7 @@
     }).join("") || "<li>No hotspots yet</li>";
 
     if (typeof pannellum !== "undefined") {
-      var holder = $("pano-preview");
+      var holder = preview;
       holder.innerHTML = "";
       var box = document.createElement("div");
       box.style.height = "260px";
@@ -399,6 +401,7 @@
   }
 
   function showTab(name) {
+    if (name !== "pano") destroyPreview();
     tab = name;
     document.querySelectorAll(".tabs button").forEach(function (b) {
       b.classList.toggle("on", b.getAttribute("data-tab") === tab);
