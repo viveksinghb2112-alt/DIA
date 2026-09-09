@@ -6,13 +6,13 @@ Plain-JS inspection tool. No framework, no build step for day-to-day use. Open `
 
 This repository only contained `# DIA` in `README.md`. There was no existing `snag.html`, report generator, or `TOURS`/`FIND` code. Phase 1 therefore **includes** a working inspector and report generator that implement the data model from the walkthrough spec, rather than patching a missing original. Visual style is the navy / brass palette in `snag.html` (not copied from an attached report, because none existed).
 
-Phase 2 (3D from video/photos) is **documented**, not built. See `docs/phase2-3d-from-video.md`. The inspector app still cannot reconstruct a mesh from an upload; processing stays off-device.
+Phase 2 (survey-grade Gaussian splat from video) still needs an **off-device** GPU tool. The inspector **does** rebuild a walkable 3D photo / 360 structure in the browser from an uploaded video or photos — that is the snagging workflow, not a measured mesh. See `docs/phase2-3d-from-video.md` for splat capture.
 
 ## Files
 
 | Path | Role |
 | --- | --- |
-| `snag.html` | Inspector: rooms, snags, face photos + pins, 360 hotspot authoring, **Download report** |
+| `snag.html` | Upload video or photos → 3D photo walk / 360 → click flaws → rectification → **Generate report** |
 | `js/report-generator.js` | Builds the standalone customer HTML. Threads `TOURS`, `FIND`, and `PANOS` into one file |
 | `js/pannellum-source.js` | Inlined Pannellum 2.5.6 JS+CSS so reports never hit a CDN |
 | `vendor/pannellum.js` / `.css` | Same bundle, used live in the inspector preview |
@@ -50,12 +50,10 @@ Inspectors downscale panoramas to **max 4096px wide JPEG at ~0.72 quality** (fac
 
 ## Inspector usage
 
-1. Fill project / unit / inspector.
-2. Select a room. Log snags. Add face photos; click the image to pin the selected snag.
-3. On **Panorama**, upload an equirectangular JPEG. Click to place room-links or snag markers (targets are dropdowns — no typing of yaw/pitch).
-4. **Download report** writes a single `.html` the customer can open with no server.
-
-**Load demo flat** synthesises three rooms so you can export without a camera.
+**1. Capture** — Upload a walkthrough **video** or several **photos** of the flat (include a 2:1 360 JPEG if you have one).
+**2. Structure** — The app builds a 3D photo walk from video frames / stills, plus a 360 walkthrough when a panorama is present. This is not a survey mesh.
+**3. Click flaws** — Tap the crack, switch, or tile. Write what is wrong and the **rectification**.
+**4. Report** — **Generate report** downloads a standalone HTML file with the walk, pins, and a snag register.
 
 ## Phase 2 (video / photos → 3D)
 
