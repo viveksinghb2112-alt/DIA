@@ -6,7 +6,7 @@ Plain-JS inspection tool. No framework, no build step for day-to-day use. Open `
 
 This repository only contained `# DIA` in `README.md`. There was no existing `snag.html`, report generator, or `TOURS`/`FIND` code. Phase 1 therefore **includes** a working inspector and report generator that implement the data model from the walkthrough spec, rather than patching a missing original. Visual style is the navy / brass palette in `snag.html` (not copied from an attached report, because none existed).
 
-Phase 2 (Gaussian splatting) is **not** started. Capture-to-splat docs and splat viewers wait until Phase 1 is confirmed on a real flat.
+Phase 2 (3D from video/photos) is **documented**, not built. See `docs/phase2-3d-from-video.md`. The inspector app still cannot reconstruct a mesh from an upload; processing stays off-device.
 
 ## Files
 
@@ -57,6 +57,6 @@ Inspectors downscale panoramas to **max 4096px wide JPEG at ~0.72 quality** (fac
 
 **Load demo flat** synthesises three rooms so you can export without a camera.
 
-## Phase 2 (deferred)
+## Phase 2 (video / photos → 3D)
 
-Splat files must stay **external** (sibling file or URL), never base64 inside the HTML. Polycam / Luma / COLMAP+`gaussian-splatting` and per-flat cost will be chosen only after Phase 1 is validated. The viewer is visualisation-only (no implied measurements). Glossy floors and mirrors will be assessed on a real bathroom/kitchen, not ignored.
+Uploading a walkthrough video or overlapping stills can produce a **Gaussian splat** (look-around 3D), not a measured “exact” building. Processing is **outside** `snag.html`. The splat is a **sibling file** (or URL), never inlined like Phase 1 photos. Full capture procedure, tool choice, and cost notes: `docs/phase2-3d-from-video.md`.
