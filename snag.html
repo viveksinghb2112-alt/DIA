@@ -3,20 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DIA — Snag inspector</title>
+  <title>DIA — Snagging</title>
   <link rel="stylesheet" href="vendor/pannellum.css">
   <style>
     :root {
-      --bg: #0f1419;
-      --surface: #1a2330;
-      --line: #2c3a51;
-      --text: #e8e4dc;
-      --muted: #9aa7b8;
-      --gold: #c4a35a;
-      --hi: #d4534a;
-      --mid: #d4a017;
-      --lo: #4aa3d4;
-      --ok: #3d9a6a;
+      --bg: #0f1419; --surface: #1a2330; --line: #2c3a51; --text: #e8e4dc;
+      --muted: #9aa7b8; --gold: #c4a35a; --hi: #d4534a; --mid: #d4a017; --lo: #4aa3d4; --ok: #3d9a6a;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
@@ -32,288 +24,259 @@
       font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
     }
     input, select { padding: .35rem .55rem; }
-    textarea { width: 100%; min-height: 70px; padding: .5rem; }
+    textarea { width: 100%; min-height: 72px; padding: .5rem; }
     button { padding: .4rem .75rem; cursor: pointer; }
     button.gold { background: var(--gold); color: #1a160c; border-color: var(--gold); font-weight: 650; }
     button.ghost { background: transparent; }
-    .layout { display: grid; grid-template-columns: 200px 1fr; min-height: calc(100vh - 58px); }
-    aside {
-      border-right: 1px solid var(--line); padding: .8rem; display: flex; flex-direction: column; gap: .4rem;
+    .drop {
+      margin: 1.5rem auto; max-width: 720px; border: 1px dashed var(--line); border-radius: 16px;
+      padding: 2.2rem 1.4rem; text-align: center; background: var(--surface);
     }
-    aside h2 { margin: 0 0 .3rem; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-    .room-btn { text-align: left; }
-    .room-btn.on { background: #243044; border-color: var(--gold); color: var(--gold); }
-    main { padding: 1rem 1.1rem 2.5rem; max-width: 980px; }
-    .tabs { display: flex; gap: .35rem; margin-bottom: .8rem; }
-    .tabs button.on { background: #243044; color: var(--gold); border-color: var(--gold); }
-    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: .9rem; margin-bottom: .75rem; }
-    .card h3 { margin: 0 0 .55rem; font-size: .95rem; }
-    .row { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; margin: .35rem 0; }
-    .snag-list { display: flex; flex-direction: column; gap: .35rem; }
-    .snag-item { display: grid; grid-template-columns: 48px 1fr auto; gap: .5rem; align-items: center; padding: .45rem; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+    .drop h2 { margin: 0 0 .4rem; font-size: 1.2rem; }
+    .drop p { color: var(--muted); margin: 0 0 1rem; }
+    .layout { display: grid; grid-template-columns: 1fr 280px; min-height: calc(100vh - 58px); }
+    main { padding: 1rem 1.1rem 2.5rem; min-width: 0; }
+    aside {
+      border-left: 1px solid var(--line); padding: .8rem; background: #141c27;
+    }
+    .steps { display: flex; gap: .5rem; flex-wrap: wrap; margin: 0 0 .8rem; color: var(--muted); font-size: .8rem; }
+    .steps b { color: var(--gold); }
+    .toggle { display: flex; gap: .35rem; margin: 0 0 .7rem; }
+    .toggle button.on { background: #243044; color: var(--gold); border-color: var(--gold); }
+    .walk {
+      position: relative; perspective: 1200px; height: min(62vh, 480px);
+      background: #0b1016; border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    }
+    .walk-card {
+      position: absolute; inset: 0; transform-style: preserve-3d;
+      transition: transform .45s cubic-bezier(.2,.7,.2,1);
+    }
+    .walk-card img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: crosshair; user-select: none; }
+    .pins { position: absolute; inset: 0; pointer-events: none; }
+    .pin { pointer-events: auto; position: absolute; transform: translate(-50%, -100%); border: 0; background: none; padding: 0; cursor: pointer; color: #fff; }
+    .pin i { display: flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 999px 999px 999px 4px; font: 700 12px/1 system-ui; }
+    .pin.H i { background: var(--hi); }
+    .pin.M i { background: var(--mid); }
+    .pin.L i { background: var(--lo); }
+    .film { display: flex; gap: .4rem; overflow: auto; margin-top: .6rem; padding-bottom: .2rem; }
+    .film button { padding: 0; border-radius: 8px; overflow: hidden; flex: 0 0 88px; height: 56px; }
+    .film button.on { outline: 2px solid var(--gold); }
+    .film img { width: 88px; height: 56px; object-fit: cover; display: block; }
+    .nav { display: flex; align-items: center; justify-content: space-between; margin-top: .55rem; gap: .5rem; }
+    .muted { color: var(--muted); font-size: .85rem; }
+    .k { font-size: .78rem; color: var(--muted); }
+    .snag-item { border: 1px solid var(--line); border-radius: 8px; padding: .45rem; margin: 0 0 .4rem; cursor: pointer; }
     .snag-item.on { border-color: var(--gold); }
-    .no { font-weight: 700; color: var(--gold); }
     .tag { font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .12rem .45rem; border-radius: 999px; }
     .tag.H { background: #d4534a22; color: var(--hi); }
     .tag.M { background: #d4a01722; color: var(--mid); }
     .tag.L { background: #4aa3d422; color: var(--lo); }
-    .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .7rem; }
-    .photo-card { position: relative; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #0b1016; }
-    .photo-card img { width: 100%; height: 160px; object-fit: cover; display: block; cursor: crosshair; }
-    .photo-card .lab { padding: .35rem .5rem; font-size: .8rem; color: var(--muted); }
-    .pin { position: absolute; transform: translate(-50%, -100%); border: 0; background: none; padding: 0; color: #fff; }
-    .pin i { display: flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px 999px 999px 4px; font: 700 11px/1 system-ui; }
-    .pin.H i { background: var(--hi); }
-    .pin.M i { background: var(--mid); }
-    .pin.L i { background: var(--lo); }
-    .eq-wrap { position: relative; background: #0b1016; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
-    .eq-wrap img { width: 100%; display: block; cursor: crosshair; }
-    .hs { position: absolute; transform: translate(-50%, -50%); width: 16px; height: 16px; border: 2px solid #fff; border-radius: 50%; }
-    .hs.scene { background: var(--gold); border-radius: 4px; }
-    .hs.snag { background: var(--hi); }
-    #pano-preview { height: 260px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
-    .muted { color: var(--muted); font-size: .85rem; }
-    .k { font-size: .78rem; color: var(--muted); }
-    @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } aside { flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--line); } }
+    #pano-box { height: min(62vh, 480px); border-radius: 14px; overflow: hidden; border: 1px solid var(--line); }
+    #status { color: var(--gold); font-size: .85rem; min-height: 1.2em; }
+    #flaw-form { display: none; }
+    #flaw-form.open { display: block; }
+    .busy { pointer-events: none; opacity: .6; }
+    @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } aside { border-left: 0; border-top: 1px solid var(--line); } }
   </style>
 </head>
 <body>
   <header>
-    <h1>DIA <span>Snag</span></h1>
+    <h1>DIA <span>Snagging</span></h1>
     <div class="bar">
-      <input id="project" placeholder="Project" size="16">
+      <input id="project" placeholder="Project / building" size="16">
       <input id="unit" placeholder="Unit" size="8">
       <input id="inspector" placeholder="Inspector" size="12">
       <input id="date" type="date">
-      <button type="button" id="btn-demo">Load demo flat</button>
-      <button type="button" class="gold" id="btn-export">Download report</button>
+      <button type="button" id="btn-demo">Load demo</button>
+      <button type="button" class="gold" id="btn-export">Generate report</button>
     </div>
   </header>
-  <div class="layout">
-    <aside>
-      <h2>Rooms</h2>
-      <div id="room-list"></div>
-      <div class="row">
-        <input id="new-room-code" placeholder="CODE" size="6">
-        <input id="new-room-name" placeholder="Name" size="10">
-        <button type="button" id="btn-add-room">Add</button>
-      </div>
-    </aside>
-    <main>
-      <div class="tabs">
-        <button type="button" class="on" data-tab="snags">Snags</button>
-        <button type="button" data-tab="photos">Photos</button>
-        <button type="button" data-tab="pano">Panorama</button>
-      </div>
-      <section id="tab-snags">
-        <div class="card">
-          <h3>New snag</h3>
-          <div class="row">
-            <input id="chk" placeholder="Check item" style="flex:1">
-            <select id="sev">
-              <option value="H">High</option>
-              <option value="M" selected>Medium</option>
-              <option value="L">Low</option>
-            </select>
-            <select id="status">
-              <option>Open</option>
-              <option>Closed</option>
-            </select>
-          </div>
-          <div class="k">Observation</div>
-          <textarea id="obs" placeholder="What is wrong"></textarea>
-          <div class="k">Remedial</div>
-          <textarea id="rem" placeholder="What should be done"></textarea>
-          <div class="row">
-            <label class="k">Due <input id="ddate" type="date"></label>
-            <button type="button" class="gold" id="btn-add-snag">Add snag</button>
-          </div>
-        </div>
-        <div class="snag-list" id="snag-list"></div>
-      </section>
-      <section id="tab-photos" hidden>
-        <div class="card">
-          <h3>Room photos (cube tour)</h3>
-          <p class="muted">Add face photos. Click a photo to drop a pin for the selected snag (or pick one when you click). Pins use 0–1 coordinates on the image.</p>
-          <div class="row">
-            <input id="photo-label" placeholder="Face label e.g. North wall" size="18">
-            <input id="photo-file" type="file" accept="image/*">
-          </div>
-          <div class="photos" id="photo-grid"></div>
-        </div>
-      </section>
-      <section id="tab-pano" hidden>
-        <div class="card">
-          <h3>360° panorama (equirectangular)</h3>
-          <p class="muted">Upload one 360 JPEG per room (phone panorama or Theta). Click the unwrapped image to place hotspots — yaw/pitch are computed for you. Gold = walk to another room, red = open a snag.</p>
-          <div class="row">
-            <input id="pano-file" type="file" accept="image/*">
-            <button type="button" class="ghost" id="btn-clear-pano">Remove panorama</button>
-          </div>
-          <p class="muted">Max stored size 4096px wide JPEG at ~72% quality. Wider sources are downscaled before embed so reports stay downloadable. A 4096×2048 pano is typically 1–2.5&nbsp;MB vs ~200&nbsp;KB for a face photo.</p>
-          <div id="pano-author" hidden>
-            <div class="row">
-              <label>Place
-                <select id="hs-type">
-                  <option value="scene">Room link</option>
-                  <option value="snag">Snag</option>
-                </select>
-              </label>
-              <select id="hs-target"></select>
-              <span class="muted" id="hs-hint">Click the image</span>
-            </div>
-            <div class="eq-wrap" id="eq-wrap">
-              <img id="eq-img" alt="Equirectangular panorama">
-            </div>
-            <p class="k" style="margin-top:.7rem">Live walkthrough preview</p>
-            <div id="pano-preview"></div>
-            <ul class="muted" id="hs-list"></ul>
-          </div>
-        </div>
-      </section>
-    </main>
+
+  <div id="capture" class="drop">
+    <h2>Upload a walkthrough video or photos of the flat</h2>
+    <p>The app rebuilds a walkable 3D photo structure (and a 360 view if you include equirectangular panoramas). Then click every crack, switch, or tile flaw, write what must be rectified, and generate the report.</p>
+    <div class="bar" style="justify-content:center">
+      <label>Photos <input id="photo-files" type="file" accept="image/*" multiple></label>
+      <label>Video <input id="video-file" type="file" accept="video/*"></label>
+    </div>
+    <p class="muted" id="status"></p>
+    <p class="muted">A true survey-grade mesh still needs a GPU tool (Polycam etc.). This app builds the inspection walkthrough in the browser from what you upload, and logs snags on that structure.</p>
   </div>
+
+  <div class="layout" id="inspect" hidden>
+    <main>
+      <p class="steps"><b>1. Capture</b> → <b>2. Click flaws on the structure</b> → <b>3. Write rectification</b> → <b>4. Report</b></p>
+      <div class="toggle">
+        <button type="button" id="btn-mode-walk" class="on">3D photo walk</button>
+        <button type="button" id="btn-mode-pano">360° walkthrough</button>
+      </div>
+      <div id="walk-view">
+        <div class="walk" id="walk">
+          <div class="walk-card" id="walk-card"></div>
+        </div>
+        <div class="nav">
+          <button type="button" id="prev">‹ Previous view</button>
+          <span class="muted" id="walk-lab"></span>
+          <button type="button" id="next">Next view ›</button>
+        </div>
+        <div class="film" id="film"></div>
+      </div>
+      <div id="pano-view" hidden>
+        <div id="pano-box"></div>
+        <p class="muted">Drag to look around. Click a flaw in the panorama to log it.</p>
+      </div>
+      <p class="muted" style="margin-top:.8rem">Click the crack, switch, or tile on the current view. A form opens on the right — describe the flaw and the rectification needed.</p>
+    </main>
+    <aside>
+      <h3 style="margin:0 0 .5rem;font-size:.95rem">Flaw + rectification</h3>
+      <p class="muted" id="click-hint">Click a point on the structure to start a snag.</p>
+      <form id="flaw-form">
+        <div class="k">What is wrong</div>
+        <textarea id="obs" placeholder="e.g. Hairline crack in floor tile / switch plate sitting proud"></textarea>
+        <div class="k">Rectification needed</div>
+        <textarea id="rem" placeholder="e.g. Replace tile / refit switch plate flush"></textarea>
+        <div class="bar" style="margin:.45rem 0">
+          <select id="sev">
+            <option value="H">High</option>
+            <option value="M" selected>Medium</option>
+            <option value="L">Low</option>
+          </select>
+          <input id="chk" placeholder="Item e.g. Tiles" size="12">
+        </div>
+        <button type="submit" class="gold">Save snag</button>
+        <button type="button" class="ghost" id="btn-cancel">Cancel</button>
+      </form>
+      <h3 style="margin:1rem 0 .4rem;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Logged snags</h3>
+      <div id="snag-list"></div>
+    </aside>
+  </div>
+
   <script src="vendor/pannellum.js"></script>
   <script src="js/pannellum-source.js"></script>
   <script src="js/report-generator.js"></script>
   <script>
 (function () {
   "use strict";
-
-  /* Compression: panoramas cap at 4096px wide so a typical 3-room report stays
-     in the 5–10 MB range. Face photos cap at 1920px. Quality 0.72 / 0.82 is a
-     visible-but-sane tradeoff for construction defects vs file size. */
-  var MAX_PANO_W = 4096;
-  var PANO_Q = 0.72;
-  var MAX_PHOTO_W = 1920;
-  var PHOTO_Q = 0.82;
-  var STORE = "dia-snag-v1";
-
+  var MAX_PANO_W = 4096, PANO_Q = 0.72, MAX_PHOTO_W = 1600, PHOTO_Q = 0.8, MAX_FRAMES = 16;
+  var STORE = "dia-snag-v2";
   var state = emptyState();
-  var room = "ENT";
-  var tab = "snags";
-  var selectedSnag = null;
-  var previewViewer = null;
+  var face = 0;
+  var mode = "walk";
+  var pending = null;
+  var viewer = null;
 
+  function today() { return new Date().toISOString().slice(0, 10); }
+  function $(id) { return document.getElementById(id); }
   function emptyState() {
     return {
-      meta: { project: "Harbour View", unit: "12B", inspector: "", date: today(), address: "" },
-      rooms: [
-        { code: "ENT", name: "Entrance" },
-        { code: "LIV", name: "Living Room" },
-        { code: "KIT", name: "Kitchen" },
-        { code: "BED1", name: "Bedroom 1" },
-        { code: "BATH", name: "Bathroom" }
-      ],
+      meta: { project: "", unit: "", inspector: "", date: today(), address: "" },
+      rooms: [{ code: "FLAT", name: "Inspection" }],
       TOURS: {},
       FIND: {},
       PANOS: {},
       nextNo: 1
     };
   }
-  function today() {
-    return new Date().toISOString().slice(0, 10);
-  }
-  function $(id) { return document.getElementById(id); }
-  function roomName(code) {
-    var r = state.rooms.find(function (x) { return x.code === code; });
-    return r ? r.name : code;
-  }
+
   function persist() {
     try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {}
   }
   function restore() {
     try {
       var raw = localStorage.getItem(STORE);
-      if (raw) {
-        var s = JSON.parse(raw);
-        state = Object.assign(emptyState(), s);
-        if (state.rooms[0]) room = state.rooms[0].code;
-      }
+      if (raw) state = Object.assign(emptyState(), JSON.parse(raw));
     } catch (e) {}
   }
 
-  function compressImage(file, maxW, quality) {
+  function hasMedia() {
+    return (state.TOURS.FLAT && state.TOURS.FLAT.length) || (state.PANOS.FLAT && state.PANOS.FLAT.src);
+  }
+
+  function compressDataUrl(src, maxW, quality) {
     return new Promise(function (resolve, reject) {
-      var url = URL.createObjectURL(file);
       var img = new Image();
       img.onload = function () {
-        var w = img.naturalWidth;
-        var h = img.naturalHeight;
+        var w = img.naturalWidth, h = img.naturalHeight;
         var scale = w > maxW ? maxW / w : 1;
-        var cw = Math.round(w * scale);
-        var ch = Math.round(h * scale);
-        var canvas = document.createElement("canvas");
-        canvas.width = cw;
-        canvas.height = ch;
-        var ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, cw, ch);
-        URL.revokeObjectURL(url);
-        resolve(canvas.toDataURL("image/jpeg", quality));
+        var c = document.createElement("canvas");
+        c.width = Math.round(w * scale);
+        c.height = Math.round(h * scale);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        resolve({ src: c.toDataURL("image/jpeg", quality), w: c.width, h: c.height, ratio: w / h });
       };
       img.onerror = reject;
-      img.src = url;
+      img.src = src;
+    });
+  }
+
+  function fileToDataUrl(file) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () { resolve(r.result); };
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  function isPanoRatio(ratio) { return ratio > 1.85 && ratio < 2.2; }
+
+  function addPhoto(src, label, ratio) {
+    if (isPanoRatio(ratio)) {
+      state.PANOS.FLAT = { src: src, hotspots: (state.PANOS.FLAT && state.PANOS.FLAT.hotspots) || [] };
+      return;
+    }
+    if (!state.TOURS.FLAT) state.TOURS.FLAT = [];
+    state.TOURS.FLAT.push({ label: label || ("View " + (state.TOURS.FLAT.length + 1)), src: src, pins: [] });
+  }
+
+  function extractVideoFrames(file) {
+    return new Promise(function (resolve, reject) {
+      var video = document.createElement("video");
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = "auto";
+      var url = URL.createObjectURL(file);
+      video.src = url;
+      video.onloadedmetadata = function () {
+        var dur = video.duration || 1;
+        var n = Math.min(MAX_FRAMES, Math.max(6, Math.round(dur)));
+        var i = 0;
+        var frames = [];
+        function grab() {
+          if (i >= n) {
+            URL.revokeObjectURL(url);
+            resolve(frames);
+            return;
+          }
+          var t = ((i + 0.4) / n) * dur;
+          var onSeek = function () {
+            video.removeEventListener("seeked", onSeek);
+            var c = document.createElement("canvas");
+            var w = video.videoWidth, h = video.videoHeight;
+            var scale = w > MAX_PHOTO_W ? MAX_PHOTO_W / w : 1;
+            c.width = Math.round(w * scale);
+            c.height = Math.round(h * scale);
+            c.getContext("2d").drawImage(video, 0, 0, c.width, c.height);
+            frames.push({ src: c.toDataURL("image/jpeg", PHOTO_Q), ratio: w / h });
+            i++;
+            $("status").textContent = "Building 3D walk… frame " + i + " / " + n;
+            grab();
+          };
+          video.addEventListener("seeked", onSeek);
+          video.currentTime = Math.min(t, dur - 0.05);
+        }
+        grab();
+      };
+      video.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error("Could not read video"));
+      };
     });
   }
 
   function pixelToYawPitch(x, y, w, h) {
-    /* Equirectangular: x 0..1 → yaw −180..180 (Pannellum: 0 at image centre, + right).
-       y 0..1 → pitch 90..−90 (positive up). */
-    return {
-      yaw: (x / w - 0.5) * 360,
-      pitch: (0.5 - y / h) * 180
-    };
+    return { yaw: (x / w - 0.5) * 360, pitch: (0.5 - y / h) * 180 };
   }
-
-  function fillMeta() {
-    $("project").value = state.meta.project || "";
-    $("unit").value = state.meta.unit || "";
-    $("inspector").value = state.meta.inspector || "";
-    $("date").value = state.meta.date || today();
-  }
-  function readMeta() {
-    state.meta.project = $("project").value;
-    state.meta.unit = $("unit").value;
-    state.meta.inspector = $("inspector").value;
-    state.meta.date = $("date").value;
-  }
-
-  function renderRooms() {
-    $("room-list").innerHTML = state.rooms.map(function (r) {
-      return '<button type="button" class="room-btn' + (r.code === room ? " on" : "") + '" data-code="' + r.code + '">' + r.name + " <span class=\"muted\">" + r.code + "</span></button>";
-    }).join("");
-  }
-
-  function renderSnags() {
-    var items = Object.keys(state.FIND).map(function (k) { return state.FIND[k]; })
-      .filter(function (f) { return f.room === room; })
-      .sort(function (a, b) { return a.no - b.no; });
-    $("snag-list").innerHTML = items.length ? items.map(function (f) {
-      return '<div class="snag-item' + (selectedSnag === f.no ? " on" : "") + '" data-no="' + f.no + '"><div class="no">#' + f.no + '</div><div><div>' + (f.chk || "") + '</div><div class="muted">' + (f.obs || "") + '</div></div><span class="tag ' + f.sev + '">' + f.sev + '</span></div>';
-    }).join("") : '<p class="muted">No snags in this room yet.</p>';
-  }
-
-  function renderPhotos() {
-    var photos = state.TOURS[room] || [];
-    $("photo-grid").innerHTML = photos.map(function (p, idx) {
-      var pins = (p.pins || []).map(function (pin) {
-        return '<button type="button" class="pin ' + (pin.sev || "M") + '" style="left:' + (pin.x * 100) + '%;top:' + (pin.y * 100) + '%"><i>' + pin.no + "</i></button>";
-      }).join("");
-      return '<div class="photo-card" data-idx="' + idx + '"><div style="position:relative"><img src="' + p.src + '" alt=""><div style="position:absolute;inset:0;pointer-events:none">' + pins.replace(/pointer-events:none/g, "") + "</div></div><div class=\"lab\">" + (p.label || "Photo") + ' · <button type="button" class="ghost" data-del="' + idx + '">Remove</button></div></div>';
-    }).join("");
-  }
-
-  function yawPitchToPercent(yaw, pitch) {
-    return { x: (yaw / 360 + 0.5) * 100, y: (0.5 - pitch / 180) * 100 };
-  }
-
-  function destroyPreview() {
-    if (previewViewer) {
-      try { previewViewer.destroy(); } catch (e) {}
-      previewViewer = null;
-    }
-  }
-
   function dataUriToBlobUrl(src) {
     var parts = src.split(",");
     var mime = (parts[0].match(/data:([^;]+)/) || [, "image/jpeg"])[1];
@@ -323,224 +286,254 @@
     return URL.createObjectURL(new Blob([arr], { type: mime }));
   }
 
-  function renderPano() {
-    var p = state.PANOS[room];
-    var author = $("pano-author");
-    destroyPreview();
-    if (!p || !p.src) {
-      author.hidden = true;
+  function destroyViewer() {
+    if (viewer) {
+      try { viewer.destroy(); } catch (e) {}
+      viewer = null;
+    }
+  }
+
+  function openForm(pend) {
+    pending = pend;
+    $("click-hint").textContent = "Describe this flaw, then save.";
+    $("flaw-form").className = "open";
+    $("obs").value = "";
+    $("rem").value = "";
+    $("chk").value = "";
+    $("obs").focus();
+  }
+
+  function closeForm() {
+    pending = null;
+    $("flaw-form").className = "";
+    $("click-hint").textContent = "Click a point on the structure to start a snag.";
+  }
+
+  function renderSnags() {
+    var items = Object.keys(state.FIND).map(function (k) { return state.FIND[k]; })
+      .sort(function (a, b) { return a.no - b.no; });
+    $("snag-list").innerHTML = items.length ? items.map(function (f) {
+      return '<div class="snag-item" data-no="' + f.no + '"><b>#' + f.no + "</b> <span class=\"tag " + f.sev + "\">" + f.sev + "</span><div>" + (f.chk || "Flaw") + '</div><div class="muted">' + (f.obs || "") + "</div></div>";
+    }).join("") : '<p class="muted">None yet.</p>';
+  }
+
+  function renderWalk() {
+    var photos = state.TOURS.FLAT || [];
+    if (!photos.length) {
+      $("walk-card").innerHTML = '<p class="muted" style="padding:2rem;text-align:center">No stills yet. Upload photos or a video, or a 360 image for the other tab.</p>';
+      $("film").innerHTML = "";
+      $("walk-lab").textContent = "";
       return;
     }
-    author.hidden = false;
-    $("eq-img").src = p.src;
-    var wrap = $("eq-wrap");
-    var preview = $("pano-preview");
-    if (!wrap || !preview) return;
-    wrap.querySelectorAll(".hs").forEach(function (el) { el.remove(); });
-    (p.hotspots || []).forEach(function (h, i) {
-      var pos = yawPitchToPercent(h.yaw, h.pitch);
-      var m = document.createElement("button");
-      m.type = "button";
-      m.className = "hs " + h.type;
-      m.style.left = pos.x + "%";
-      m.style.top = pos.y + "%";
-      m.title = h.type + " → " + h.target;
-      m.dataset.i = i;
-      wrap.appendChild(m);
+    if (face < 0) face = photos.length - 1;
+    if (face >= photos.length) face = 0;
+    var p = photos[face];
+    var pins = (p.pins || []).map(function (pin) {
+      return '<button type="button" class="pin ' + (pin.sev || "M") + '" style="left:' + (pin.x * 100) + "%;top:" + (pin.y * 100) + '%" data-open="' + pin.no + '"><i>' + pin.no + "</i></button>";
+    }).join("");
+    $("walk-card").style.transform = "rotateY(" + (-face * (360 / Math.max(photos.length, 4))) + "deg)";
+    $("walk-card").innerHTML = '<img id="walk-img" alt="" src="' + p.src + '"><div class="pins">' + pins + "</div>";
+    $("walk-lab").textContent = (p.label || "View") + " · " + (face + 1) + "/" + photos.length;
+    $("film").innerHTML = photos.map(function (ph, i) {
+      return '<button type="button" class="' + (i === face ? "on" : "") + '" data-face="' + i + '"><img src="' + ph.src + '" alt=""></button>';
+    }).join("");
+  }
+
+  function renderPano() {
+    destroyViewer();
+    var box = $("pano-box");
+    box.innerHTML = "";
+    var p = state.PANOS.FLAT;
+    if (!p || !p.src) {
+      box.innerHTML = '<p class="muted" style="padding:2rem;text-align:center">No 360° image. Upload an equirectangular panorama (about 2:1), or stay on 3D photo walk.</p>';
+      return;
+    }
+    if (typeof pannellum === "undefined") return;
+    var holder = document.createElement("div");
+    holder.style.height = "100%";
+    box.appendChild(holder);
+    viewer = pannellum.viewer(holder, {
+      type: "equirectangular",
+      panorama: dataUriToBlobUrl(p.src),
+      autoLoad: true,
+      hotSpots: (p.hotspots || []).filter(function (h) { return h.type === "snag"; }).map(function (h) {
+        return {
+          yaw: h.yaw, pitch: h.pitch, type: "info", text: "Snag #" + h.target,
+          cssClass: "snag-hs",
+          clickHandlerFunc: function () { highlightSnag(h.target); }
+        };
+      })
     });
-    fillHsTargets();
-    $("hs-list").innerHTML = (p.hotspots || []).map(function (h, i) {
-      return "<li>" + h.type + " yaw " + h.yaw.toFixed(1) + " pitch " + h.pitch.toFixed(1) + " → " + h.target + ' <button type="button" data-hdel="' + i + '">×</button></li>';
-    }).join("") || "<li>No hotspots yet</li>";
-
-    if (typeof pannellum !== "undefined") {
-      var holder = preview;
-      holder.innerHTML = "";
-      var box = document.createElement("div");
-      box.style.height = "260px";
-      holder.appendChild(box);
-      previewViewer = pannellum.viewer(box, {
-        type: "equirectangular",
-        panorama: dataUriToBlobUrl(p.src),
-        autoLoad: true,
-        hotSpots: (p.hotspots || []).map(function (h) {
-          return {
-            yaw: h.yaw,
-            pitch: h.pitch,
-            type: "info",
-            text: h.type + " " + h.target,
-            cssClass: h.type === "scene" ? "scene-hs" : "snag-hs"
-          };
-        })
-      });
-    }
+    holder.addEventListener("click", function (e) {
+      if (e.target.closest && e.target.closest(".pnlm-hotspot, .pnlm-controls, .pnlm-zoom-in, .pnlm-zoom-out, .pnlm-fullscreen-toggle-button")) return;
+      if (!viewer || !viewer.mouseEventToCoords) return;
+      var coords = viewer.mouseEventToCoords(e);
+      if (!coords) return;
+      openForm({ kind: "pano", pitch: coords[0], yaw: coords[1] });
+    });
   }
 
-  function fillHsTargets() {
-    var type = $("hs-type").value;
-    var sel = $("hs-target");
-    if (type === "scene") {
-      sel.innerHTML = state.rooms.filter(function (r) { return r.code !== room && state.PANOS[r.code]; })
-        .map(function (r) { return '<option value="' + r.code + '">' + r.name + "</option>"; }).join("")
-        || '<option value="">(add panos to other rooms first)</option>';
-    } else {
-      sel.innerHTML = Object.keys(state.FIND).map(function (k) { return state.FIND[k]; })
-        .filter(function (f) { return f.room === room; })
-        .map(function (f) { return '<option value="' + f.no + '">#' + f.no + " " + (f.chk || "") + "</option>"; }).join("")
-        || '<option value="">(add a snag first)</option>';
-    }
+  function highlightSnag(no) {
+    var f = state.FIND[no] || state.FIND[String(no)];
+    if (!f) return;
+    $("obs").value = f.obs || "";
+    $("rem").value = f.rem || "";
+    $("chk").value = f.chk || "";
+    $("sev").value = f.sev || "M";
+    $("click-hint").textContent = "Snag #" + f.no;
+    $("flaw-form").className = "open";
+    pending = null;
   }
 
-  function render() {
-    fillMeta();
-    renderRooms();
+  function setMode(next) {
+    mode = next;
+    $("btn-mode-walk").className = mode === "walk" ? "on" : "";
+    $("btn-mode-pano").className = mode === "pano" ? "on" : "";
+    $("walk-view").hidden = mode !== "walk";
+    $("pano-view").hidden = mode !== "pano";
+    destroyViewer();
+    if (mode === "pano") renderPano();
+    else renderWalk();
+  }
+
+  function showInspect() {
+    $("capture").hidden = hasMedia();
+    $("inspect").hidden = !hasMedia();
+    if (!hasMedia()) return;
+    var hasPano = !!(state.PANOS.FLAT && state.PANOS.FLAT.src);
+    var hasWalk = !!(state.TOURS.FLAT && state.TOURS.FLAT.length);
+    $("btn-mode-pano").disabled = !hasPano;
+    $("btn-mode-walk").disabled = !hasWalk;
+    if (hasPano && !hasWalk) setMode("pano");
+    else setMode("walk");
     renderSnags();
-    renderPhotos();
-    if (tab === "pano") renderPano();
-    persist();
   }
 
-  function showTab(name) {
-    if (name !== "pano") destroyPreview();
-    tab = name;
-    document.querySelectorAll(".tabs button").forEach(function (b) {
-      b.classList.toggle("on", b.getAttribute("data-tab") === tab);
+  function ingestImages(files) {
+    var list = Array.prototype.slice.call(files);
+    var i = 0;
+    $("status").textContent = "Building structure from photos…";
+    function next() {
+      if (i >= list.length) {
+        $("status").textContent = "Ready — click flaws on the structure.";
+        persist();
+        showInspect();
+        renderWalk();
+        return;
+      }
+      var file = list[i++];
+      fileToDataUrl(file).then(function (raw) {
+        return compressDataUrl(raw, MAX_PHOTO_W, PHOTO_Q).then(function (out) {
+          if (isPanoRatio(out.ratio)) return compressDataUrl(raw, MAX_PANO_W, PANO_Q);
+          return out;
+        });
+      }).then(function (out) {
+        addPhoto(out.src, file.name.replace(/\.[^.]+$/, ""), out.ratio);
+        $("status").textContent = "Photo " + i + " / " + list.length;
+        next();
+      }).catch(function () { next(); });
+    }
+    next();
+  }
+
+  $("photo-files").addEventListener("change", function (e) {
+    if (e.target.files && e.target.files.length) ingestImages(e.target.files);
+  });
+  $("video-file").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    document.body.classList.add("busy");
+    $("status").textContent = "Reading video…";
+    extractVideoFrames(file).then(function (frames) {
+      frames.forEach(function (fr, idx) {
+        addPhoto(fr.src, "Frame " + (idx + 1), fr.ratio);
+      });
+      $("status").textContent = "3D walk built from " + frames.length + " frames. Click each flaw.";
+      persist();
+      showInspect();
+      renderWalk();
+    }).catch(function (err) {
+      $("status").textContent = err.message || "Video failed";
+    }).then(function () {
+      document.body.classList.remove("busy");
+      $("video-file").value = "";
     });
-    $("tab-snags").hidden = tab !== "snags";
-    $("tab-photos").hidden = tab !== "photos";
-    $("tab-pano").hidden = tab !== "pano";
-    if (tab === "pano") renderPano();
-  }
+  });
 
-  document.querySelector(".tabs").addEventListener("click", function (e) {
-    var b = e.target.closest("button");
-    if (b) showTab(b.getAttribute("data-tab"));
+  $("walk").addEventListener("click", function (e) {
+    var open = e.target.closest("[data-open]");
+    if (open) { highlightSnag(open.getAttribute("data-open")); return; }
+    var img = $("walk-img");
+    if (!img || e.target !== img) return;
+    var rect = img.getBoundingClientRect();
+    openForm({
+      kind: "photo",
+      idx: face,
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top) / rect.height
+    });
   });
-  $("room-list").addEventListener("click", function (e) {
-    var b = e.target.closest("[data-code]");
+  $("film").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-face]");
     if (!b) return;
-    room = b.getAttribute("data-code");
-    selectedSnag = null;
-    render();
+    face = Number(b.getAttribute("data-face"));
+    renderWalk();
   });
-  $("btn-add-room").onclick = function () {
-    var code = $("new-room-code").value.trim().toUpperCase();
-    var name = $("new-room-name").value.trim();
-    if (!code) return;
-    if (state.rooms.some(function (r) { return r.code === code; })) return;
-    state.rooms.push({ code: code, name: name || code });
-    $("new-room-code").value = "";
-    $("new-room-name").value = "";
-    render();
-  };
+  $("prev").onclick = function () { face--; renderWalk(); };
+  $("next").onclick = function () { face++; renderWalk(); };
+  $("btn-mode-walk").onclick = function () { setMode("walk"); };
+  $("btn-mode-pano").onclick = function () { setMode("pano"); };
+
+  $("flaw-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!pending) return;
+    var no = state.nextNo++;
+    var sev = $("sev").value;
+    state.FIND[no] = {
+      no: no, room: "FLAT",
+      chk: $("chk").value || "Flaw",
+      obs: $("obs").value,
+      sev: sev, status: "Open",
+      rem: $("rem").value,
+      ddate: $("date").value || today(),
+      close: "", after: ""
+    };
+    if (pending.kind === "photo") {
+      var photos = state.TOURS.FLAT || [];
+      if (photos[pending.idx]) photos[pending.idx].pins.push({ x: pending.x, y: pending.y, no: no, sev: sev });
+    } else if (pending.kind === "pano" && state.PANOS.FLAT) {
+      state.PANOS.FLAT.hotspots = state.PANOS.FLAT.hotspots || [];
+      state.PANOS.FLAT.hotspots.push({ yaw: pending.yaw, pitch: pending.pitch, type: "snag", target: no });
+    }
+    closeForm();
+    persist();
+    renderSnags();
+    if (mode === "walk") renderWalk();
+    else renderPano();
+  });
+  $("btn-cancel").onclick = closeForm;
+
+  function readMeta() {
+    state.meta.project = $("project").value;
+    state.meta.unit = $("unit").value;
+    state.meta.inspector = $("inspector").value;
+    state.meta.date = $("date").value;
+  }
+  function fillMeta() {
+    $("project").value = state.meta.project || "";
+    $("unit").value = state.meta.unit || "";
+    $("inspector").value = state.meta.inspector || "";
+    $("date").value = state.meta.date || today();
+  }
   ["project", "unit", "inspector", "date"].forEach(function (id) {
     $(id).addEventListener("change", function () { readMeta(); persist(); });
   });
 
-  $("btn-add-snag").onclick = function () {
-    var no = state.nextNo++;
-    state.FIND[no] = {
-      no: no,
-      room: room,
-      chk: $("chk").value,
-      obs: $("obs").value,
-      sev: $("sev").value,
-      status: $("status").value,
-      rem: $("rem").value,
-      ddate: $("ddate").value,
-      close: "",
-      after: ""
-    };
-    $("chk").value = "";
-    $("obs").value = "";
-    $("rem").value = "";
-    selectedSnag = no;
-    render();
-  };
-  $("snag-list").addEventListener("click", function (e) {
-    var item = e.target.closest(".snag-item");
-    if (!item) return;
-    selectedSnag = Number(item.getAttribute("data-no"));
-    renderSnags();
-  });
-
-  $("photo-file").addEventListener("change", function (e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    compressImage(file, MAX_PHOTO_W, PHOTO_Q).then(function (src) {
-      if (!state.TOURS[room]) state.TOURS[room] = [];
-      state.TOURS[room].push({ label: $("photo-label").value || "Photo", src: src, pins: [] });
-      $("photo-file").value = "";
-      renderPhotos();
-      persist();
-    });
-  });
-  $("photo-grid").addEventListener("click", function (e) {
-    var del = e.target.closest("[data-del]");
-    if (del) {
-      state.TOURS[room].splice(Number(del.getAttribute("data-del")), 1);
-      renderPhotos();
-      persist();
-      return;
-    }
-    var card = e.target.closest(".photo-card");
-    if (!card || e.target.tagName !== "IMG") return;
-    var img = e.target;
-    var rect = img.getBoundingClientRect();
-    var x = (e.clientX - rect.left) / rect.width;
-    var y = (e.clientY - rect.top) / rect.height;
-    var no = selectedSnag;
-    if (!no) {
-      var keys = Object.keys(state.FIND).filter(function (k) { return state.FIND[k].room === room; });
-      if (!keys.length) { alert("Add a snag in this room first, then click to pin it."); return; }
-      no = Number(keys[0]);
-    }
-    var f = state.FIND[no];
-    var idx = Number(card.getAttribute("data-idx"));
-    state.TOURS[room][idx].pins.push({ x: x, y: y, no: no, sev: f.sev });
-    renderPhotos();
-    persist();
-  });
-
-  $("pano-file").addEventListener("change", function (e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    compressImage(file, MAX_PANO_W, PANO_Q).then(function (src) {
-      state.PANOS[room] = { src: src, hotspots: (state.PANOS[room] && state.PANOS[room].hotspots) || [] };
-      $("pano-file").value = "";
-      renderPano();
-      persist();
-    });
-  });
-  $("btn-clear-pano").onclick = function () {
-    delete state.PANOS[room];
-    renderPano();
-    persist();
-  };
-  $("hs-type").onchange = fillHsTargets;
-  $("eq-img").addEventListener("click", function (e) {
-    var p = state.PANOS[room];
-    if (!p) return;
-    var rect = e.target.getBoundingClientRect();
-    var ang = pixelToYawPitch(e.clientX - rect.left, e.clientY - rect.top, rect.width, rect.height);
-    var type = $("hs-type").value;
-    var target = $("hs-target").value;
-    if (!target) { $("hs-hint").textContent = "Pick a target first"; return; }
-    p.hotspots.push({ yaw: ang.yaw, pitch: ang.pitch, type: type, target: type === "snag" ? Number(target) : target });
-    $("hs-hint").textContent = "yaw " + ang.yaw.toFixed(1) + "°  pitch " + ang.pitch.toFixed(1) + "°";
-    renderPano();
-    persist();
-  });
-  $("hs-list").addEventListener("click", function (e) {
-    var b = e.target.closest("[data-hdel]");
-    if (!b) return;
-    state.PANOS[room].hotspots.splice(Number(b.getAttribute("data-hdel")), 1);
-    renderPano();
-    persist();
-  });
-
   $("btn-export").onclick = function () {
     readMeta();
+    if (!Object.keys(state.FIND).length) {
+      if (!confirm("No snags logged yet. Generate the report anyway?")) return;
+    }
     var html = generateReportHtml({
       meta: state.meta,
       rooms: state.rooms,
@@ -548,137 +541,91 @@
       FIND: state.FIND,
       PANOS: state.PANOS
     }, { js: window.PANNELLUM_JS || "", css: window.PANNELLUM_CSS || "" });
-    var blob = new Blob([html], { type: "text/html;charset=utf-8" });
     var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = (state.meta.unit || "inspection") + "-report.html";
+    a.href = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
+    a.download = (state.meta.unit || "snag") + "-report.html";
     a.click();
   };
 
-  /* Demo: three rooms with generated cubemap-style panoramas + photos + snags. */
-  function paintDemoPano(name, wall, doors) {
+  function paintDemoPano(name, wall) {
     var w = 1024, h = 512;
     var canvas = document.createElement("canvas");
     canvas.width = w; canvas.height = h;
     var ctx = canvas.getContext("2d");
     var img = ctx.createImageData(w, h);
-    var wall2 = [wall[0] - 12, wall[1] - 12, wall[2] - 10];
-    for (var y = 0; y < h; y++) {
+    var y, x;
+    for (y = 0; y < h; y++) {
       var pitch = (0.5 - (y + 0.5) / h) * Math.PI;
       var cosP = Math.cos(pitch), sinP = Math.sin(pitch);
-      for (var x = 0; x < w; x++) {
+      for (x = 0; x < w; x++) {
         var yaw = ((x + 0.5) / w - 0.5) * 2 * Math.PI;
         var dx = Math.sin(yaw) * cosP, dy = sinP, dz = Math.cos(yaw) * cosP;
-        var t = Infinity, face = "z";
-        function consider(tt, f) { if (tt > 0 && tt < t) { t = tt; face = f; } }
+        var t = Infinity, faceN = "z";
+        function consider(tt, f) { if (tt > 0 && tt < t) { t = tt; faceN = f; } }
         if (dx > 1e-8) consider(1 / dx, "+x"); else if (dx < -1e-8) consider(-1 / dx, "-x");
         if (dy > 1e-8) consider(1 / dy, "+y"); else if (dy < -1e-8) consider(-1 / dy, "-y");
         if (dz > 1e-8) consider(1 / dz, "+z"); else if (dz < -1e-8) consider(-1 / dz, "-z");
-        var px = dx * t, py = dy * t, pz = dz * t;
-        var r, g, b;
-        if (face === "+y") { r = 210; g = 214; b = 220; }
-        else if (face === "-y") {
+        var px = dx * t, py = dy * t, pz = dz * t, r, g, b;
+        if (faceN === "+y") { r = 210; g = 214; b = 220; }
+        else if (faceN === "-y") {
           var chk = (Math.floor((px + 1) * 4) + Math.floor((pz + 1) * 4)) & 1;
           r = chk ? 92 : 76; g = chk ? 86 : 70; b = chk ? 76 : 60;
         } else {
-          var u = (face === "+x" || face === "-x") ? (pz + 1) / 2 : (px + 1) / 2;
-          var v = (py + 1) / 2;
-          var use = (face === "+z" || face === "-x") ? wall : wall2;
-          r = use[0] + v * 12; g = use[1] + v * 8; b = use[2];
-          var onDoor = doors.some(function (d) {
-            var dyaw = Math.atan2(dx, dz) - d * Math.PI / 180;
-            while (dyaw > Math.PI) dyaw -= Math.PI * 2;
-            while (dyaw < -Math.PI) dyaw += Math.PI * 2;
-            return Math.abs(dyaw) < 0.22 && v > 0.35 && v < 0.92 && u > 0.32 && u < 0.68;
-          });
-          if (onDoor) { r = 48; g = 36; b = 28; }
+          r = wall[0]; g = wall[1]; b = wall[2];
         }
         var i = (y * w + x) * 4;
         img.data[i] = r; img.data[i + 1] = g; img.data[i + 2] = b; img.data[i + 3] = 255;
       }
     }
     ctx.putImageData(img, 0, 0);
-    ctx.fillStyle = "rgba(196,163,90,.85)";
-    ctx.fillRect(24, h * 0.4, name.length * 11 + 18, 28);
-    ctx.fillStyle = "#1a160c";
-    ctx.font = "16px system-ui";
-    ctx.fillText(name, 32, h * 0.4 + 20);
+    ctx.fillStyle = "#c4a35a";
+    ctx.font = "18px system-ui";
+    ctx.fillText(name + " — click a crack to log a snag", 28, h * 0.42);
     return canvas.toDataURL("image/jpeg", 0.7);
   }
   function paintDemoPhoto(wall, label) {
-    var w = 640, h = 400;
     var c = document.createElement("canvas");
-    c.width = w; c.height = h;
+    c.width = 640; c.height = 400;
     var ctx = c.getContext("2d");
     ctx.fillStyle = "rgb(" + wall.join(",") + ")";
-    ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = "#c8ccd2";
-    ctx.fillRect(0, 0, w, 70);
+    ctx.fillRect(0, 0, 640, 400);
+    ctx.fillStyle = "#c8ccd2"; ctx.fillRect(0, 0, 640, 70);
     var i, j;
     for (i = 0; i < 8; i++) for (j = 0; j < 3; j++) {
       ctx.fillStyle = ((i + j) & 1) ? "#5c5248" : "#4a463c";
-      ctx.fillRect(i * (w / 8), 280 + j * 40, w / 8, 40);
+      ctx.fillRect(i * 80, 280 + j * 40, 80, 40);
     }
-    ctx.fillStyle = "#c4a35a";
-    ctx.font = "22px system-ui";
+    ctx.fillStyle = "#c4a35a"; ctx.font = "22px system-ui";
     ctx.fillText(label, 20, 44);
+    ctx.fillStyle = "#d4534a";
+    ctx.fillRect(300, 310, 36, 8);
     return c.toDataURL("image/jpeg", 0.82);
   }
 
   $("btn-demo").onclick = function () {
     state = emptyState();
-    state.meta.inspector = "Demo";
-    state.meta.date = today();
-    state.rooms = [
-      { code: "ENT", name: "Entrance" },
-      { code: "LIV", name: "Living Room" },
-      { code: "KIT", name: "Kitchen" }
+    state.meta = { project: "Harbour View", unit: "12B", inspector: "Demo", date: today(), address: "" };
+    var pano = paintDemoPano("Flat", [70, 88, 108]);
+    state.TOURS.FLAT = [
+      { label: "Hall", src: paintDemoPhoto([72, 90, 110], "Hall — cracked tile"), pins: [] },
+      { label: "Living", src: paintDemoPhoto([90, 86, 78], "Living"), pins: [] },
+      { label: "Kitchen", src: paintDemoPhoto([86, 78, 70], "Kitchen — switch"), pins: [] }
     ];
-    state.FIND = {
-      1: { no: 1, room: "ENT", chk: "Skirting", obs: "Scuffed paint on hall skirting.", sev: "M", status: "Open", rem: "Fill, sand, repaint to match.", ddate: today(), close: "", after: "" },
-      2: { no: 2, room: "KIT", chk: "Floor tiles", obs: "Hairline crack at threshold.", sev: "H", status: "Open", rem: "Replace cracked tile.", ddate: today(), close: "", after: "" },
-      3: { no: 3, room: "LIV", chk: "Paint", obs: "Drip on ceiling line.", sev: "L", status: "Open", rem: "Spot sand and touch up.", ddate: today(), close: "", after: "" }
-    };
-    state.nextNo = 4;
-    state.TOURS = {
-      ENT: [
-        { label: "Front", src: paintDemoPhoto([72, 90, 110], "Entrance front"), pins: [{ x: 0.42, y: 0.78, no: 1, sev: "M" }] },
-        { label: "Right", src: paintDemoPhoto([68, 86, 104], "Entrance right"), pins: [] }
-      ],
-      LIV: [
-        { label: "Front", src: paintDemoPhoto([90, 86, 78], "Living front"), pins: [{ x: 0.55, y: 0.22, no: 3, sev: "L" }] },
-        { label: "Left", src: paintDemoPhoto([86, 82, 74], "Living left"), pins: [] }
-      ],
-      KIT: [
-        { label: "Front", src: paintDemoPhoto([86, 78, 70], "Kitchen front"), pins: [{ x: 0.5, y: 0.82, no: 2, sev: "H" }] },
-        { label: "Window", src: paintDemoPhoto([80, 74, 66], "Kitchen window"), pins: [] }
-      ]
-    };
-    var ent = paintDemoPano("Entrance", [70, 88, 108], [0, 90]);
-    var liv = paintDemoPano("Living Room", [92, 86, 74], [-90, 90]);
-    var kit = paintDemoPano("Kitchen", [88, 76, 64], [180]);
-    state.PANOS = {
-      ENT: { src: ent, hotspots: [
-        { yaw: 0, pitch: -8, type: "scene", target: "LIV" },
-        { yaw: -40, pitch: -18, type: "snag", target: 1 }
-      ]},
-      LIV: { src: liv, hotspots: [
-        { yaw: -90, pitch: -6, type: "scene", target: "ENT" },
-        { yaw: 90, pitch: -6, type: "scene", target: "KIT" },
-        { yaw: 20, pitch: 12, type: "snag", target: 3 }
-      ]},
-      KIT: { src: kit, hotspots: [
-        { yaw: 180, pitch: -8, type: "scene", target: "LIV" },
-        { yaw: 15, pitch: -22, type: "snag", target: 2 }
-      ]}
-    };
-    room = "ENT";
-    render();
-    showTab("pano");
+    state.PANOS.FLAT = { src: pano, hotspots: [] };
+    fillMeta();
+    persist();
+    showInspect();
+    renderWalk();
+    $("status").textContent = "Demo structure loaded. Click the red mark on a view.";
   };
 
   restore();
-  render();
+  fillMeta();
+  if (hasMedia()) {
+    $("status").textContent = "Previous capture restored.";
+    showInspect();
+    renderWalk();
+  }
 })();
   </script>
 </body>

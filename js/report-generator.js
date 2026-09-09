@@ -80,6 +80,11 @@
     "#find-panel .k{color:var(--muted);font-size:.8rem}",
     "#find-panel .x{position:absolute;right:1rem;top:.7rem;border:0;background:none;color:var(--muted);font-size:1.2rem;cursor:pointer}",
     ".hint{margin:.6rem 0 0;color:var(--muted);font-size:.8rem}",
+    ".register{margin:1.4rem 0 0;border-top:1px solid var(--line);padding-top:1rem}",
+    ".register h2{margin:0 0 .7rem;font-size:1rem}",
+    ".reg{border:1px solid var(--line);border-radius:10px;padding:.7rem .8rem;margin:0 0 .5rem;background:var(--surface)}",
+    ".reg h3{margin:0 0 .25rem;font-size:.95rem}",
+    ".reg p{margin:.2rem 0;font-size:.9rem}",
     ".snag-hs{background:var(--hi)!important;border:2px solid #fff!important;width:28px!important;height:28px!important;border-radius:50%!important;box-shadow:0 0 0 3px #d4534a66}",
     ".scene-hs{background:var(--gold)!important;border:2px solid #fff!important;width:26px!important;height:26px!important;border-radius:6px!important}",
     "@media(min-width:720px){#find-panel{left:auto;width:380px;right:1rem;bottom:1rem;border:1px solid var(--line);border-radius:14px;max-height:70vh}}"
@@ -395,6 +400,44 @@
       })
       .join("");
 
+    var finds = Object.keys(FIND)
+      .map(function (k) {
+        return FIND[k];
+      })
+      .sort(function (a, b) {
+        return (a.no || 0) - (b.no || 0);
+      });
+    var register =
+      '<section class="register"><h2>Snag register</h2>' +
+      (finds.length
+        ? finds
+            .map(function (f) {
+              return (
+                '<article class="reg"><h3>#' +
+                esc(f.no) +
+                " · " +
+                esc(f.room) +
+                " · " +
+                esc(f.chk || "Flaw") +
+                '</h3><div class="row"><span class="tag ' +
+                esc(f.sev) +
+                '">' +
+                (f.sev === "H" ? "High" : f.sev === "M" ? "Medium" : "Low") +
+                '</span><span class="tag ' +
+                esc(f.status || "") +
+                '">' +
+                esc(f.status || "") +
+                "</span></div><div class=\"k\">Observation</div><p>" +
+                esc(f.obs) +
+                "</p><div class=\"k\">Rectification</div><p>" +
+                esc(f.rem) +
+                "</p></article>"
+              );
+            })
+            .join("")
+        : "<p class=\"hint\">No snags logged.</p>") +
+      "</section>";
+
     return (
       "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n" +
       '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n' +
@@ -422,7 +465,8 @@
       '<button type="button" id="btn-pano">Walkthrough</button></div>' +
       '<div id="cube-view"></div>' +
       '<div id="pano-view" hidden></div>' +
-      '<p class="hint">Photo tour is a swipeable room cube with tap pins. Walkthrough is a 360° panorama — drag to look around, gold squares change rooms, red dots open snags.</p>' +
+      '<p class="hint">Photo tour is a swipeable 3D walk of the uploaded photos or video frames. Walkthrough is a 360° panorama when one was uploaded. Click pins or red dots for each flaw. The snag register below lists every defect and the rectification written on site.</p>' +
+      register +
       "</div>\n" +
       '<aside id="find-panel" hidden><button class="x" id="fp-close-btn" aria-label="Close">×</button>' +
       '<h2 id="fp-title"></h2><div class="row" id="fp-tags"></div>' +
